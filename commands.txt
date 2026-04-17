@@ -1,0 +1,18 @@
+
+//////////// Activate myenv and run  ///////////
+source "/home/ubuntu/streamlit-apppp/myenv/bin/activate"
+
+cd /home/ubuntu/streamlit-apppp/streamlit_app
+sudo docker compose up -d
+
+python "/home/ubuntu/streamlit-apppp/streamlit_app/post_creator_end_point.py"
+
+
+
+
+////////////////////////////////////
+# Check server specs (very important for load testing)
+lscpu | grep "CPU(s)"
+free -h
+nproc
+df -h

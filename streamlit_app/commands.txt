@@ -1,0 +1,44 @@
+cd ..
+cd project name  example cd C:\Users\Afifa\Downloads\streamlit-apppp\streamlit-app
+venv\Scripts\activate    for activating virtual environment 
+streamlit run file name example streamlit run app.py or main.py 
+
+
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+
+
+
+
+
+/////////////////////////////  For Local Host - Docker   ///////////////////////////
+///////
+ cd C:\Users\Afifa\Downloads\streamlit-apppp\streamlit_app
+docker compose down -v
+docker compose up -d
+
+# Wait 20-30 seconds for all services to be healthy
+docker compose ps
+
+streamlit run post_creator_main_persona.py
+////////
+
+# 1. Clone the official repo
+git clone https://github.com/langfuse/langfuse.git
+cd langfuse
+
+# 2. Copy the ready-to-run compose file
+cp ./docker-compose.yml.example ./docker-compose.yml
+
+# 3. Start everything (Postgres + ClickHouse + Langfuse)
+docker compose up -d
+
+# 4. Update your .env (replace the cloud keys)
+LANGFUSE_SECRET_KEY=sk-lf-...          # keep your existing secret
+LANGFUSE_PUBLIC_KEY=pk-lf-...          # keep your existing public
+LANGFUSE_BASE_URL=http://localhost:3000   # ← this is the magic line
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+ streamlit run C:\Users\Afifa\Downloads\streamlit-apppp\streamlit_app\post_creator_end_point.py
