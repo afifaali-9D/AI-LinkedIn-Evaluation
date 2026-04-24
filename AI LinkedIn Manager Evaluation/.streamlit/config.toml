@@ -1,0 +1,6 @@
+# server.address: bind on all interfaces so other machines can connect.
+# (Your browser will often still show "localhost" in the URL bar for same-PC
+# use — that is expected; 0.0.0.0 is not a normal hostname in browsers.)
+[server]
+address = "0.0.0.0"
+port = 8501

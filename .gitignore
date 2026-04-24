@@ -1,5 +1,7 @@
 code.txt
 myenv/
+.venv/
+venv/
 .env
 
 # Python cache
@@ -10,3 +12,4 @@ __pycache__/
 
 # VS Code workspace
 *.code-workspace
+*.backup

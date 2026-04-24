@@ -24,8 +24,7 @@ load_dotenv(dotenv_path=ENV_PATH, override=True)
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
 logger = logging.getLogger(__name__)
 
-DEV_BASE_URL = "https://development-linkedin-manager-content-creation-53521016621.us-central1.run.app"
-PROD_BASE_URL = "https://v2-linkedin-content-creation-53521016621.us-central1.run.app"
+STAGE_BASE_URL = "https://stage-linkedin-manager-content-creation-53521016621.us-central1.run.app"
 POST_PATHS = ["/create-post", "/default/create_post_create_post_post"]
 
 
@@ -82,7 +81,7 @@ async def call_create_post(base_url: str, profile_input: dict) -> Dict[str, Any]
         "error": None,
     }
 
-    async with httpx.AsyncClient(timeout=180) as client:
+    async with httpx.AsyncClient(timeout=300) as client:
         for path in POST_PATHS:
             url = f"{base_url}{path}"
             start = time.perf_counter()
@@ -123,36 +122,25 @@ def print_result(label: str, result: Dict[str, Any]) -> None:
         print(f"Error     : {result['error']}")
 
 
-def print_comparison(dev_result: Dict[str, Any], prod_result: Dict[str, Any]) -> None:
+def print_comparison(stage_result: Dict[str, Any]) -> None:
     print("\n" + "=" * 100)
-    print("COMPARISON (Development vs Production)")
+    print("RESULT (Stage)")
     print("=" * 100)
     print(
-        f"DEV  -> ok={dev_result['ok']}, status={dev_result['status_code']}, latency_ms={dev_result['latency_ms']}"
+        f"STAGE -> ok={stage_result['ok']}, status={stage_result['status_code']}, latency_ms={stage_result['latency_ms']}"
     )
-    print(
-        f"PROD -> ok={prod_result['ok']}, status={prod_result['status_code']}, latency_ms={prod_result['latency_ms']}"
-    )
-
-    if dev_result["ok"] and prod_result["ok"]:
-        dev_latency = dev_result.get("latency_ms")
-        prod_latency = prod_result.get("latency_ms")
-        if isinstance(dev_latency, (int, float)) and isinstance(prod_latency, (int, float)):
-            faster = "DEV" if dev_latency < prod_latency else "PROD"
-            diff = abs(dev_latency - prod_latency)
-            print(f"Latency winner: {faster} by {diff:.2f} ms")
     print("=" * 100 + "\n")
 async def run_single_request(request_dict: dict, langfuse_client: Optional[Langfuse]) -> None:
     metadata = {
         "source": "manual-tester",
-        "environment": "compare-dev-prod",
+        "environment": "stage",
         "model_provider": request_dict.get("model_provider"),
         "model_version": request_dict.get("model_version"),
     }
 
     observation_ctx = (
         langfuse_client.start_as_current_observation(
-            name="create-post-compare-dev-prod",
+            name="create-post-stage",
             input=request_dict,
             metadata=metadata,
         )
@@ -161,23 +149,17 @@ async def run_single_request(request_dict: dict, langfuse_client: Optional[Langf
     )
 
     with observation_ctx as observation:
-        dev_result, prod_result = await asyncio.gather(
-            call_create_post(DEV_BASE_URL, request_dict),
-            call_create_post(PROD_BASE_URL, request_dict),
-        )
+        stage_result = await call_create_post(STAGE_BASE_URL, request_dict)
 
-        print_result("DEVELOPMENT", dev_result)
-        print_result("PRODUCTION", prod_result)
-        print_comparison(dev_result, prod_result)
+        print_result("STAGE", stage_result)
+        print_comparison(stage_result)
 
         if observation:
             observation.update(
-                output={"development": dev_result, "production": prod_result},
+                output={"stage": stage_result},
                 metadata={
-                    "dev_ok": dev_result["ok"],
-                    "prod_ok": prod_result["ok"],
-                    "dev_latency_ms": dev_result["latency_ms"],
-                    "prod_latency_ms": prod_result["latency_ms"],
+                    "stage_ok": stage_result["ok"],
+                    "stage_latency_ms": stage_result["latency_ms"],
                 },
             )
             # In interactive mode, flush after each run so traces show up immediately.
@@ -201,10 +183,9 @@ async def main() -> Optional[Langfuse]:
     langfuse_client, langfuse_status = get_langfuse_client()
 
     print("=" * 100)
-    print("LinkedIn Post Creator Comparator (DEV + PROD)")
-    print(f"Development URL : {DEV_BASE_URL}")
-    print(f"Production URL  : {PROD_BASE_URL}")
-    print(f"Langfuse        : {langfuse_status}")
+    print("LinkedIn Post Creator (Stage)")
+    print(f"Stage URL : {STAGE_BASE_URL}")
+    print(f"Langfuse  : {langfuse_status}")
     print("=" * 100 + "\n")
 
     if not sys.stdin.isatty():
